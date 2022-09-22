@@ -1,0 +1,16 @@
+a{
+    text-decoration:none;
+}
+.view{float:right;}
+.adress{
+    float: right;
+}
+.info{
+    margin:40px auto; 
+    height:100px;
+}
+
+#map {
+    height: 500px;
+  }
+  

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-4 m-4 bg-light border border-success rounded">
+    <h2 class="text success">{{ object.place_name}}</h2>
+    <h3>{{object.headline}}</h3>
+    <p>{{ object.place_detail}}</p>
+    <img src={{object.thumbnail}}>
+    <table border="1" class="info">
+        <tr>
+            <th>{{object.place_opening}}</th>
+        </tr>
+        <tr>
+            <th>{{object.place_access}}</th>
+        </tr>
+        <tr>
+            <th>{{object.place_parking}}</th>
+        </tr>
+        <tr>
+            <th>{{object.place_url}}</th>
+        </tr>
+    </table>
+
+    <div id="map"></div>
+
+    <script>
+        // Initialize and add the map
+        function initMap() {
+
+            const geocoder = new google.maps.Geocoder();
+
+            const address = '{{object.place_adress}}';
+
+            geocoder.geocode({ 'address': address }, function (results, status) {
+                if (status == 'OK') {
+
+                    const map = new google.maps.Map(document.getElementById("map"), {
+                        zoom: 15,
+                        center: results[0].geometry.location,
+                    });
+
+                    new google.maps.Marker({
+                        position: results[0].geometry.location,
+                        map,
+                        
+                    });
+                } else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        }
+
+
+        window.initMap = initMap;
+
+    </script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM&callback=initMap&v=weekly"
+        defer></script>
+
+</div>
+{% endblock content %}
