@@ -1,9 +1,9 @@
+from re import A
 from django.shortcuts import render
-from .models import Place
+from .models import Area, Place
 import csv
 import io
 from django.views.generic import ListView,DetailView
-
 from django.core.paginator import Paginator
 from .consts import ITEM_PER_PAGE
 
@@ -60,4 +60,21 @@ class DetailPlaceView(DetailView):
     template_name = 'detail_place.html'
     model = Place
     
+#area_ view未完成
+def area_view(request):
+    object_list = Place.objects.order_by('-id')
+    obj_area= Area.objects.order_by('-id')
+    paginator =Paginator(object_list, ITEM_PER_PAGE)
+    page_number=request.GET.get('page',1)
+    page_obj=paginator.page(page_number)
+
+   #active_place_area = Place.objects \
+    #.filter(place_adress__contains='北海道')\
+    #.exclude(area="hokkaido")\
+    #.values("area") 
+    
+   #print(active_place_area)
+   #return render(request, 
+    #      'area.html',
+     #     )
 

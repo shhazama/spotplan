@@ -11,4 +11,5 @@ urlpatterns = [
     #path('', views.ListPlaceView.as_view(),name='list-place'),
     path('place/<int:pk>/detail/',views.DetailPlaceView.as_view(),name='detail-place'),
     # :
+    path('area/',views.area_view,name='area'),
 ]
