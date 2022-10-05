@@ -7,6 +7,8 @@
     <img src={{object.thumbnail}}>
     <table border="1" class="info">
         <tr>
+            <th>{{object.place_adress}}</th>
+        <tr>
             <th>{{object.place_opening}}</th>
         </tr>
         <tr>
@@ -26,27 +28,23 @@
         // Initialize and add the map
         function initMap() {
 
-            const geocoder = new google.maps.Geocoder();
+            //const geocoder = new google.maps.Geocoder();
 
-            const address = '{{object.place_adress}}';
+            //const address = '{{object.place_adress}}';
+            const lat = {{object.geo_lat}}
+            const lng = {{object.geo_lng}};
+            const position = { lat: lat, lng: lng };
 
-            geocoder.geocode({ 'address': address }, function (results, status) {
-                if (status == 'OK') {
-
-                    const map = new google.maps.Map(document.getElementById("map"), {
-                        zoom: 12,
-                        center: results[0].geometry.location,
-                    });
-
-                    new google.maps.Marker({
-                        position: results[0].geometry.location,
-                        map,
-                        
-                    });
-                } else {
-                    alert('Geocode was not successful for the following reason: ' + status);
-                }
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: position
             });
+            new google.maps.Marker({
+                position: position,
+                map,
+
+            });
+
         }
 
 

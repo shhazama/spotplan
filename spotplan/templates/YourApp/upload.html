@@ -1,6 +1,6 @@
 {% extends 'list_place.html' %}
 {% load static %}
-{% block title %}ブキデータアップロード{% endblock %}
+{% block title %}アップロード{% endblock %}
 {% block extrahead %}
 <script>
 $(function(){
@@ -11,10 +11,32 @@ $(function(){
 
 {% block content %}
 <h3>CSVをアップロード</h3>
-<form action="{% url 'YourAppName:upload' %}" method="post" enctype="multipart/form-data">
+<form action="{% url 'upload' %}" method="post" enctype="multipart/form-data">
   {% csrf_token %}
   <input type="file" class="dropify" data-default-file="ファイルを選択してください" name="csv">
   <button type="submit" class="btn" name="button">アップロード</button>
 </form>
+<h3>8地方地域分別</h3>
+<p>北海道、東北地方、関東地方、中部地方、関西地方、中国地方、四国地方、九州地方に分類します。</p>
+<form action="{% url 'bunbetsu' %}" method="post" >
+  {% csrf_token %}
+  
+  <button type="submit" class="btn" name="button">分別開始</button>
+  </form>
 
+  <h3>都道府県別に分類</h3>
+  
+  <form action="{% url 'city_touroku' %}" method="post" >
+    {% csrf_token %}
+    
+    <button type="submit" class="btn" name="button">分類開始</button>
+    </form>
+  
+    <h3>geocode出力</h3>
+  
+    <form action="{% url 'geo' %}" method="post" >
+      {% csrf_token %}
+      
+      <button type="submit" class="btn" name="button">分類開始</button>
+      </form>
 {% endblock content %}
