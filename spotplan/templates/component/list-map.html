@@ -1,0 +1,38 @@
+<div id="map"></div>
+<script>
+    function initMap() {
+        const center = {lat: {{ map_center.lat }}, lng: {{ map_center.lng }}};
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 10,
+            center: center
+        });
+        const placeList = [];
+        {% for item in page_obj %}
+            placeList.push({
+                url: '{% url 'detail-place' item.pk %}',
+                name: '{{ item.place_name }}',
+                lat: {{ item.geo_lat }},
+                lng: {{ item.geo_lng }}
+            });
+        {% endfor %}
+        for (const place of placeList) {
+            const marker = new google.maps.Marker({
+                position: {lat: place.lat, lng: place.lng},
+                map,
+            });
+            const contentString = `<a href="${place.url}">${place.name}</a>`;
+            const infowindow = new google.maps.InfoWindow({
+                content: contentString,
+            });
+            marker.addListener("click", () => {
+                infowindow.open({
+                    anchor: marker,
+                    map,
+                    shouldFocus: false,
+                });
+            });
+        }
+    }
+    window.initMap = initMap;
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM&callback=initMap&v=weekly" defer></script>

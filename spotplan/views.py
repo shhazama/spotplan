@@ -1,6 +1,5 @@
 # from logging.config import _LoggerConfiguration
 from re import A
-from typing_extensions import OrderedDict
 from unittest import result
 from django.shortcuts import render
 from .models import Area, City, Place
@@ -9,7 +8,7 @@ import io
 from django.views.generic import ListView, DetailView, TemplateView
 from django.core.paginator import Paginator
 from .consts import ITEM_PER_PAGE
-from django.db.models import Q
+from django.db.models import Q, Avg
 import googlemaps
 import time
 
@@ -67,9 +66,20 @@ def citylist_view(request, city):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.page(page_number)
 
+    geo_lat_avg = page_obj.object_list.aggregate(geo_lat_avg=Avg('geo_lat'))
+    geo_lng_avg = page_obj.object_list.aggregate(geo_lng_avg=Avg('geo_lng'))
+
     return render(request,
-          'citylist_place.html',
-          {'object_list': object_list, 'page_obj': page_obj},)
+            'citylist_place.html',
+            {
+                'object_list': object_list,
+                'page_obj': page_obj,
+                'map_center': {
+                    'lat': geo_lat_avg['geo_lat_avg'],
+                    'lng': geo_lng_avg['geo_lng_avg']
+                }
+            },
+        )
 
 
 class DetailPlaceView(DetailView):
