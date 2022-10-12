@@ -1,0 +1,35 @@
+<div id="citymap"></div>
+
+<script>
+    // Initialize and add the map
+    function initMap() {
+
+        //const geocoder = new google.maps.Geocoder();
+
+        //const address = '{{object.place_adress}}';
+        const lat = {{item.geo_lat}};
+        const lng = {{item.geo_lng}};
+        const position = { lat: lat, lng: lng };
+        print(position)
+
+        const map = new google.maps.Map(document.getElementById("citymap"), {
+            zoom: 12,
+            center: {{obj.center}};
+        });
+        new google.maps.Marker({
+            position: position,
+            map,
+
+        });
+
+    }
+
+
+    window.initMap = initMap;
+
+</script>
+<script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM&callback=initMap&v=weekly"
+    defer></script>
+
+</div>

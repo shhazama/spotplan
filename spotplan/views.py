@@ -11,8 +11,7 @@ from django.core.paginator import Paginator
 from .consts import ITEM_PER_PAGE
 from django.db.models import Q
 import googlemaps
-import time
-
+from django.db.models import Avg
 
 def upload(request):
     if 'csv' in request.FILES:
@@ -62,14 +61,16 @@ def list_view(request, area):
 
 def citylist_view(request, city):
     object_list = Place.objects.filter(city__city=city).order_by('id')
-
     paginator = Paginator(object_list, ITEM_PER_PAGE)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.page(page_number)
+ 
+    
+   
 
     return render(request,
           'citylist_place.html',
-          {'object_list': object_list, 'page_obj': page_obj},)
+          {'object_list': object_list, 'page_obj': page_obj})
 
 
 class DetailPlaceView(DetailView):
