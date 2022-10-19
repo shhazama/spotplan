@@ -74,6 +74,8 @@
                     if (status == 'OK') {
                         directionsRenderer.setDirections(response);
                         console.log(response);
+                        document.getElementById('route-result').textContent = response.routes[0].legs[0].distance.text;
+                        location.href = `${location.href}?hoge=aaa&fuga=bbb`;
                     }
                 });
             }
@@ -91,6 +93,8 @@
     <div class="d-grid gap-2 d-md-block m-3">
         <button class="btn btn-primary" onclick="currentLocation();">現在地からの経路を検索</button>
     </div>
+
+    <div id="route-result"></div>
 
 </div>
 {% endblock content %}
