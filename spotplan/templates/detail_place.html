@@ -25,12 +25,17 @@
         </tr>
     </table>
 
+
     <div id="map"></div>
 
     <script>
         // Initialize and add the map
+        var map = null;
+        var directionsService = null;
+        var directionsRenderer = null;
         function initMap() {
-
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
             //const geocoder = new google.maps.Geocoder();
 
             //const address = '{{object.place_adress}}';
@@ -38,7 +43,7 @@
             const lng = {{object.geo_lng}};
             const position = { lat: lat, lng: lng };
 
-            const map = new google.maps.Map(document.getElementById("map"), {
+            map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 12,
                 center: position
             });
@@ -47,17 +52,52 @@
                 map,
 
             });
+            directionsRenderer.setMap(map);
             
 
         }
 
-
         window.initMap = initMap;
 
+        function currentLocation() {
+            function success(pos) {
+                var crd = pos.coords;
+
+                console.log('Your current position is:');
+                console.log(`Latitude : ${crd.latitude}`);
+                console.log(`Longitude: ${crd.longitude}`);
+                console.log(`More or less ${crd.accuracy} meters.`);
+
+                var request = {
+                    origin: new google.maps.LatLng(crd.latitude, crd.longitude),
+                    destination: new google.maps.LatLng({{object.geo_lat}}, {{object.geo_lng}}),
+                    travelMode: 'DRIVING'
+                };
+                directionsService.route(request, function(response, status) {
+                    if (status == 'OK') {
+                        directionsRenderer.setDirections(response);
+                        console.log(response);
+                        document.getElementById('route-result').textContent = response.routes[0].legs[0].distance.text;
+                        // location.href = `${location.href}?hoge=aaa&fuga=bbb`;
+                    }
+                });
+            }
+
+            function error(err) {
+                console.warn(`ERROR(${err.code}): ${err.message}`);
+            }
+            navigator.geolocation.getCurrentPosition(success, error);
+        }
     </script>
     <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM&callback=initMap&v=weekly"
         defer></script>
+
+    <div class="d-grid gap-2 d-md-block m-3">
+        <button class="btn btn-primary" onclick="currentLocation();">現在地からの経路を検索</button>
+    </div>
+
+    <div id="route-result"></div>
 
 </div>
 {% if request.user.is_authenticated %}
