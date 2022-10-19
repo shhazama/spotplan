@@ -4,6 +4,9 @@
     <h2 class="text success">{{ object.place_name}}</h2>
     <h3>{{object.headline}}</h3>
     <p>{{ object.place_detail}}</p>
+    {% if request.user.is_authenticated %}
+    <a href ="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
+    {% endif %}
     <img src={{object.thumbnail}}>
     <table border="1" class="info">
         <tr>
@@ -57,5 +60,7 @@
         defer></script>
 
 </div>
+{% if request.user.is_authenticated %}
 <a href ="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
+{% endif %}
 {% endblock content %}

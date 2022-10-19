@@ -590,8 +590,11 @@ def followPlace(request):
     active_place = Place.objects.get(all)
     print(active_place)
     active_place.update(favorite_place=active_place)
-    return redirect(request, 'home/<str:city>/')
 
+
+
+
+    return redirect(request, 'home/<str:city>/')
 
 class CreateReviewView(LoginRequiredMixin,CreateView):
     model = Review
