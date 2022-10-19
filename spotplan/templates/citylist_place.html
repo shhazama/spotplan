@@ -5,72 +5,27 @@
 
 <div class="p-4 m-4 bg-light border border-success rounded">
   <h2 class="text-success">{{item.place_name}}</h2>
-  <h6>{{item.place_headline}}</h6>
+  <h5>{{item.headline}}</h5>
   <h6 class="adress">場所:{{item.place_adress}}</h6>
-
   <h6>所要時間:{{item.required_time}}</h6>
-  <h6>lat:{{item.geo_lat}}, lng:{{item.geo_lng}}</h6>
+  
   <img src={{item.thumbnail}} class="view">
 
   <div class="mt-3">
 
     <a href="{% url 'detail-place' item.pk %}" class="btn btn-primary">詳細へ</a>
+    
 
   </div>
 
 </div>
 {% endfor %}
-<div id="heikin">
-<h6>{{object.ave_lat}}</h6>
-</div>
-
-<div id="citymap">
-
-  <script>
-    // Initialize and add the map
-    function initMap() {
-
-      //const geocoder = new google.maps.Geocoder();
-
-      //const address = '{{object.place_adress}}';
-      var markerData = [{lat: '{{object.geo_lat}}', lng: '{{object.geo_lng}}'}]
-      
-
-
-
-      const map = new google.maps.Map(document.getElementById("citymap"), {
-        zoom: 10,
-        center: { lat: 43, lng: 141 },
-      });
-      for (i = 0; i < data.length; i++) {
-    var myMarker = new google.maps.Marker({
-      position: markerData[i].position,
-      map: map
-    });
-    google.maps.event.addListener(myMarker, 'click', function(event) {
-      new google.maps.InfoWindow({
-        content: data[i].content // どのマーカーがクリックされても、その時点では i = 5
-      }).open(map, myMarker);
-    });
-  }
-      
-    window.initMap = initMap;
-  }
-
-  </script>
-  <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM&callback=initMap&v=weekly"
-    defer></script>
-
-
-</div>
-
-</div>
 
 
 
 
 
+{% include 'maps/areamap.html' %}
 {% include 'component/pagination2.html' %}
 
 

@@ -1,0 +1,4 @@
+<a href="{% url 'follow' object.pk %}" method="post">
+    <button type="submit" name="button">お気に入り追加</button>
+    {% csrf_token %}
+</a>

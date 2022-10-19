@@ -1,55 +1,52 @@
-{% for list_obj in area_obj%}
+<div id="map"></div>
+
 <script>
-     const features = '{{object.place_adress}}'
-     geocoder.geocode({ 'address': address }, function (results, status) {
-                if (status == 'OK') {
+    // Initialize and add the map
+    function initMap() {
 
-                    const map = new google.maps.Map(document.getElementById("map"), {
-                        zoom: 12,
-                        center: results[0].geometry.location,
-                    });
+        //const geocoder = new google.maps.Geocoder();
 
-                    new google.maps.Marker({
-                        position: results[0].geometry.location,
-                        map,
-                        
-                    });
-                } else {
-                    alert('Geocode was not successful for the following reason: ' + status);
-                }
+        //const address = '{{object.place_adress}}';
+        const center = {lat: {{ map_center.lat }}, lng: {{ map_center.lng }}};
+
+
+        const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 8,
+        center: center
+        });
+
+        const placeList = [];
+       {% for item in page_obj %}
+         placeList.push({
+           url: '{% url 'detail-place' item.pk %}',
+           
+           name: '{{item.place_name}}',
+           lat: {{ item.geo_lat }},
+           lng: {{ item.geo_lng }}
+           });
+        {% endfor %}
+
+        for (const place of placeList) {
+           const marker = new google.maps.Marker({
+             position: { lat: place.lat, lng: place.lng },
+             map,
+        });
+        const contentString = `<a href="${place.url}">${place.name}</a>`;
+        const infowindow = new google.maps.InfoWindow({
+            content: contentString,
+        });
+        marker.addListener("click", () => {
+            infowindow.open({
+                anchor: marker,
+                map,
+                shouldFocus: false,
             });
+        });}
+    }
+    window.initMap = initMap;
+
+
 </script>
-{% endfor %}
-
-<nav>
-    <script>
-        var map;
-        var marker;
-        var geocoder;
-        var infoWindow;
-        //#変数markarsでマーカーを立てる
-        var markerData = markers;
-        function initMap() {
-            var mapLatLng = new google.maps.LatLng({lat: markerData[0]['lat'], lng: markerData[0]['lng']}); 
-            // 緯度経度のデータ作成
-            map = new google.maps.Map(document.getElementById('list-map'), {
-                           
-                center: mapLatLng,
-                zoom: 13
-            });
-        }
-
-
-       
-        
-        for (let i = 0; i < features.length; i++) {
-            const marker = new google.maps.Marker({
-                position: features[i].position,
-                icon: icons[features[i].type].icon,
-                map: map,
-            });
-        }
-
-
-    </script>
-</nav>
+<script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM&callback=initMap&v=weekly"
+    defer></script>

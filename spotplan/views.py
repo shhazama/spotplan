@@ -2,16 +2,22 @@
 from re import A
 from typing_extensions import OrderedDict
 from unittest import result
-from django.shortcuts import render
-from .models import Area, City, Place
+from django.shortcuts import render, redirect
+from .models import Area, City, Place,Review
 import csv
 import io
-from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic import CreateView, DetailView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from .consts import ITEM_PER_PAGE
-from django.db.models import Q
+from django.db.models import Q, Avg
 import googlemaps
-from django.db.models import Avg
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, get_object_or_404
+from django.urls import reverse
+
+
 
 def upload(request):
     if 'csv' in request.FILES:
@@ -55,8 +61,8 @@ def list_view(request, area):
     page_obj = paginator.page(page_number)
 
     return render(request,
-          'list_place.html',
-          {'object_list': object_list, 'page_obj': page_obj},)
+                  'list_place.html',
+                  {'object_list': object_list, 'page_obj': page_obj},)
 
 
 def citylist_view(request, city):
@@ -64,13 +70,28 @@ def citylist_view(request, city):
     paginator = Paginator(object_list, ITEM_PER_PAGE)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.page(page_number)
- 
-    
-   
+    geo_lat_avg = page_obj.object_list.aggregate(geo_lat_avg=Avg('geo_lat'))
+    geo_lng_avg = page_obj.object_list.aggregate(geo_lng_avg=Avg('geo_lng'))
 
     return render(request,
-          'citylist_place.html',
-          {'object_list': object_list, 'page_obj': page_obj})
+                  'citylist_place.html',
+                  {
+                      'object_list': object_list,
+                      'page_obj': page_obj,
+                      'map_center': {'lat': geo_lat_avg['geo_lat_avg'], 'lng': geo_lng_avg['geo_lng_avg']}
+                  }
+                  )
+
+def mypage_view(request, area):
+    object_list = Place.objects.filter(areas__area=area).order_by('id')
+
+    paginator = Paginator(object_list, ITEM_PER_PAGE)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.page(page_number)
+
+    return render(request,
+                  'mypage.html',
+                  {'object_list': object_list, 'page_obj': page_obj},)
 
 
 class DetailPlaceView(DetailView):
@@ -83,481 +104,509 @@ class HomeView(TemplateView):
 
 
 def geo(request):
-   
-    def geocode(address):
-       gmaps = googlemaps.Client(key='AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM')
-       result = gmaps.geocode(address)
-       lat = result[0]['geometry']['location']['lat']
-       lng = result[0]['geometry']['location']['lng']
 
-       return lat, lng
-       # 住所リストを読み込む
-       # 住所リストには　address というカラムが必須
-       
-    adresslist = Place.objects.values('place_adress','id')
-       
+    def geocode(address):
+        gmaps = googlemaps.Client(
+            key='AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM')
+        result = gmaps.geocode(address)
+        lat = result[0]['geometry']['location']['lat']
+        lng = result[0]['geometry']['location']['lng']
+
+        return lat, lng
+        # 住所リストを読み込む
+        # 住所リストには　address というカラムが必須
+
+    adresslist = Place.objects.values('place_adress', 'id')
+
     # 緯度経度データの取得
-    #result = []  取得した緯度経度を入れておくリスト
-    for ad in adresslist :
-      lat, lng = geocode(ad['place_adress'])
-      place = Place.objects.get(id=ad['id'])
-      place.geo_lat = lat
-      place.geo_lng = lng
-      place.save()  
-      print('ok')
+    # result = []  取得した緯度経度を入れておくリスト
+    for ad in adresslist:
+        lat, lng = geocode(ad['place_adress'])
+        place = Place.objects.get(id=ad['id'])
+        place.geo_lat = lat
+        place.geo_lng = lng
+        place.save()
+        print('ok')
 
     return render(request, 'YourApp/upload.html')
 
 # 8区分分別
+
+
 def bunbetsu(request):
     # areag事の分別
     active_place_area = Place.objects \
-    .filter(place_adress__contains='北海道')
+        .filter(place_adress__contains='北海道')
     print(active_place_area.count())
-    hokkaido=Area.objects.get(area='hokkaido')
+    hokkaido = Area.objects.get(area='hokkaido')
     active_place_area.update(areas=hokkaido)
     print('北海道　ok')
-    
+
     # 九州
     active_place_area = Place.objects \
-    .filter(Q(place_adress__contains='沖縄県')|Q(place_adress__contains='福岡県')|Q(place_adress__contains='鹿児島県')|Q(place_adress__contains='佐賀県')|Q(place_adress__contains='長崎県')|Q(place_adress__contains='熊本県')|Q(place_adress__contains='大分県')|Q(place_adress__contains='宮崎県'))
+        .filter(Q(place_adress__contains='沖縄県') | Q(place_adress__contains='福岡県') | Q(place_adress__contains='鹿児島県') | Q(place_adress__contains='佐賀県') | Q(place_adress__contains='長崎県') | Q(place_adress__contains='熊本県') | Q(place_adress__contains='大分県') | Q(place_adress__contains='宮崎県'))
     print(active_place_area.count())
-    kyusyu=Area.objects.get(area='kyusyu')
+    kyusyu = Area.objects.get(area='kyusyu')
     active_place_area.update(areas=kyusyu)
     print('九州　ok')
-    
-    
+
     # 中国
     active_place_area = Place.objects \
-    .filter(Q(place_adress__contains='広島県')|Q(place_adress__contains='山口県')|Q(place_adress__contains='鳥取県')|Q(place_adress__contains='岡山県')|Q(place_adress__contains='島根県'))
+        .filter(Q(place_adress__contains='広島県') | Q(place_adress__contains='山口県') | Q(place_adress__contains='鳥取県') | Q(place_adress__contains='岡山県') | Q(place_adress__contains='島根県'))
     print(active_place_area.count())
-    tyugoku=Area.objects.get(area='tyugoku')
+    tyugoku = Area.objects.get(area='tyugoku')
     active_place_area.update(areas=tyugoku)
     print('中国　ok')
 
     # 四国
     active_place_area = Place.objects \
-    .filter(Q(place_adress__contains='香川県')|Q(place_adress__contains='愛媛県')|Q(place_adress__contains='高知県')|Q(place_adress__contains='徳島県'))
+        .filter(Q(place_adress__contains='香川県') | Q(place_adress__contains='愛媛県') | Q(place_adress__contains='高知県') | Q(place_adress__contains='徳島県'))
     print(active_place_area.count())
-    shikoku=Area.objects.get(area='shikoku')
+    shikoku = Area.objects.get(area='shikoku')
     active_place_area.update(areas=shikoku)
     print('四国　ok')
-    
+
     # 近畿
     active_place_area = Place.objects \
-    .filter(Q(place_adress__contains='大阪府')|Q(place_adress__contains='京都府')|Q(place_adress__contains='兵庫県')|Q(place_adress__contains='奈良県')|Q(place_adress__contains='和歌山県')|Q(place_adress__contains='三重県')|Q(place_adress__contains='滋賀県'))
+        .filter(Q(place_adress__contains='大阪府') | Q(place_adress__contains='京都府') | Q(place_adress__contains='兵庫県') | Q(place_adress__contains='奈良県') | Q(place_adress__contains='和歌山県') | Q(place_adress__contains='三重県') | Q(place_adress__contains='滋賀県'))
     print(active_place_area.count())
-    kinki=Area.objects.get(area='kinki')
+    kinki = Area.objects.get(area='kinki')
     active_place_area.update(areas=kinki)
     print('近畿　ok')
 
     # 中部
     active_place_area = Place.objects \
-    .filter(Q(place_adress__contains='新潟県')|Q(place_adress__contains='富山県')|Q(place_adress__contains='石川県')|Q(place_adress__contains='福井県')|Q(place_adress__contains='山梨県')|Q(place_adress__contains='長野県')|Q(place_adress__contains='岐阜県')|Q(place_adress__contains='静岡県')|Q(place_adress__contains='愛知県'))
+        .filter(Q(place_adress__contains='新潟県') | Q(place_adress__contains='富山県') | Q(place_adress__contains='石川県') | Q(place_adress__contains='福井県') | Q(place_adress__contains='山梨県') | Q(place_adress__contains='長野県') | Q(place_adress__contains='岐阜県') | Q(place_adress__contains='静岡県') | Q(place_adress__contains='愛知県'))
     print(active_place_area.count())
-    tyubu=Area.objects.get(area='tyubu')
+    tyubu = Area.objects.get(area='tyubu')
     active_place_area.update(areas=tyubu)
     print('中部　ok')
 
     # 関東
     active_place_area = Place.objects \
-    .filter(Q(place_adress__contains='東京都')|Q(place_adress__contains='群馬県')|Q(place_adress__contains='埼玉県')|Q(place_adress__contains='千葉県')|Q(place_adress__contains='茨城県')|Q(place_adress__contains='栃木県')|Q(place_adress__contains='神奈川県'))
+        .filter(Q(place_adress__contains='東京都') | Q(place_adress__contains='群馬県') | Q(place_adress__contains='埼玉県') | Q(place_adress__contains='千葉県') | Q(place_adress__contains='茨城県') | Q(place_adress__contains='栃木県') | Q(place_adress__contains='神奈川県'))
     print(active_place_area.count())
-    kannto=Area.objects.get(area='kannto')
+    kannto = Area.objects.get(area='kannto')
     active_place_area.update(areas=kannto)
     print('関東　ok')
 
     # 東北
     active_place_area = Place.objects \
-    .filter(Q(place_adress__contains='青森県')|Q(place_adress__contains='岩手県')|Q(place_adress__contains='秋田県')|Q(place_adress__contains='宮城県')|Q(place_adress__contains='山形県')|Q(place_adress__contains='福島県'))
+        .filter(Q(place_adress__contains='青森県') | Q(place_adress__contains='岩手県') | Q(place_adress__contains='秋田県') | Q(place_adress__contains='宮城県') | Q(place_adress__contains='山形県') | Q(place_adress__contains='福島県'))
     print(active_place_area.count())
-    touhoku=Area.objects.get(area='touhoku')
+    touhoku = Area.objects.get(area='touhoku')
     active_place_area.update(areas=touhoku)
     print('東北　ok')
-    
-
-
 
     return render(request, 'YourApp/upload.html')
 
 # 都道府県ごとに分類
+
+
 def city_touroku(request):
     # areag事の分別
     active_place_city = Place.objects \
-    .filter(place_adress__contains='北海道')
+        .filter(place_adress__contains='北海道')
     print(active_place_city.count())
-    a=City.objects.get(city='j1')
+    a = City.objects.get(city='j1')
     active_place_city.update(city=a)
     print('j1 ok')
 
     # j2登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='青森県')
+        .filter(place_adress__contains='青森県')
     print(active_place_city.count())
-    b=City.objects.get(city='j2')
+    b = City.objects.get(city='j2')
     active_place_city.update(city=b)
     print('j2 ok')
-        
+
     # j3登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='岩手県')
+        .filter(place_adress__contains='岩手県')
     print(active_place_city.count())
-    b=City.objects.get(city='j3')
+    b = City.objects.get(city='j3')
     active_place_city.update(city=b)
-    print('j3 ok')    
-        
+    print('j3 ok')
+
     # j4登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='宮城県')
+        .filter(place_adress__contains='宮城県')
     print(active_place_city.count())
-    b=City.objects.get(city='j4')
+    b = City.objects.get(city='j4')
     active_place_city.update(city=b)
     print('j4 ok')
-        
+
     # j5登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='秋田県')
+        .filter(place_adress__contains='秋田県')
     print(active_place_city.count())
-    b=City.objects.get(city='j5')
+    b = City.objects.get(city='j5')
     active_place_city.update(city=b)
     print('j5 ok')
-        
+
     # j6登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='山形県')
+        .filter(place_adress__contains='山形県')
     print(active_place_city.count())
-    b=City.objects.get(city='j6')
+    b = City.objects.get(city='j6')
     active_place_city.update(city=b)
     print('j6 ok')
-        
+
     # j7登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='福島県')
+        .filter(place_adress__contains='福島県')
     print(active_place_city.count())
-    b=City.objects.get(city='j7')
+    b = City.objects.get(city='j7')
     active_place_city.update(city=b)
     print('j7 ok')
-        
+
     # j8登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='茨城県')
+        .filter(place_adress__contains='茨城県')
     print(active_place_city.count())
-    b=City.objects.get(city='j8')
+    b = City.objects.get(city='j8')
     active_place_city.update(city=b)
     print('j8 ok')
-        
+
     # j9登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='栃木県')
+        .filter(place_adress__contains='栃木県')
     print(active_place_city.count())
-    b=City.objects.get(city='j9')
+    b = City.objects.get(city='j9')
     active_place_city.update(city=b)
     print('j9 ok')
-        
+
     # j10登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='群馬県')
+        .filter(place_adress__contains='群馬県')
     print(active_place_city.count())
-    b=City.objects.get(city='j10')
+    b = City.objects.get(city='j10')
     active_place_city.update(city=b)
     print('j10 ok')
-        
+
     # j11登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='埼玉県')
+        .filter(place_adress__contains='埼玉県')
     print(active_place_city.count())
-    b=City.objects.get(city='j11')
+    b = City.objects.get(city='j11')
     active_place_city.update(city=b)
     print('j11 ok')
-        
+
     # j12登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='千葉県')
+        .filter(place_adress__contains='千葉県')
     print(active_place_city.count())
-    b=City.objects.get(city='j12')
+    b = City.objects.get(city='j12')
     active_place_city.update(city=b)
     print('j12 ok')
-        
+
     # j13登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='東京都')
+        .filter(place_adress__contains='東京都')
     print(active_place_city.count())
-    b=City.objects.get(city='j13')
+    b = City.objects.get(city='j13')
     active_place_city.update(city=b)
     print('j13 ok')
-        
+
     # j14登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='神奈川県')
+        .filter(place_adress__contains='神奈川県')
     print(active_place_city.count())
-    b=City.objects.get(city='j14')
+    b = City.objects.get(city='j14')
     active_place_city.update(city=b)
     print('j14 ok')
-        
+
     # j15登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='新潟県')
+        .filter(place_adress__contains='新潟県')
     print(active_place_city.count())
-    b=City.objects.get(city='j15')
+    b = City.objects.get(city='j15')
     active_place_city.update(city=b)
     print('j15 ok')
-        
+
     # j16登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='富山県')
+        .filter(place_adress__contains='富山県')
     print(active_place_city.count())
-    b=City.objects.get(city='j16')
+    b = City.objects.get(city='j16')
     active_place_city.update(city=b)
     print('j16 ok')
-        
+
     # j17登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='石川県')
+        .filter(place_adress__contains='石川県')
     print(active_place_city.count())
-    b=City.objects.get(city='j17')
+    b = City.objects.get(city='j17')
     active_place_city.update(city=b)
     print('j17 ok')
-        
+
     # j18登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='福井県')
+        .filter(place_adress__contains='福井県')
     print(active_place_city.count())
-    b=City.objects.get(city='j18')
+    b = City.objects.get(city='j18')
     active_place_city.update(city=b)
     print('j18 ok')
-        
+
     # j19登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='山梨県')
+        .filter(place_adress__contains='山梨県')
     print(active_place_city.count())
-    b=City.objects.get(city='j19')
+    b = City.objects.get(city='j19')
     active_place_city.update(city=b)
     print('j19 ok')
-        
+
     # j20登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='長野県')
+        .filter(place_adress__contains='長野県')
     print(active_place_city.count())
-    b=City.objects.get(city='j20')
+    b = City.objects.get(city='j20')
     active_place_city.update(city=b)
     print('j20 ok')
-        
+
     # j21登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='岐阜県')
+        .filter(place_adress__contains='岐阜県')
     print(active_place_city.count())
-    b=City.objects.get(city='j21')
+    b = City.objects.get(city='j21')
     active_place_city.update(city=b)
     print('j21 ok')
-        
+
     # j22登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='静岡県')
+        .filter(place_adress__contains='静岡県')
     print(active_place_city.count())
-    b=City.objects.get(city='j22')
+    b = City.objects.get(city='j22')
     active_place_city.update(city=b)
     print('j22 ok')
-        
+
     # j23登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='愛知県')
+        .filter(place_adress__contains='愛知県')
     print(active_place_city.count())
-    b=City.objects.get(city='j23')
+    b = City.objects.get(city='j23')
     active_place_city.update(city=b)
     print('j23 ok')
 
-        
     # j24登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='三重県')
+        .filter(place_adress__contains='三重県')
     print(active_place_city.count())
-    b=City.objects.get(city='j24')
+    b = City.objects.get(city='j24')
     active_place_city.update(city=b)
     print('j24 ok')
-        
+
     # j25登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='滋賀県')
+        .filter(place_adress__contains='滋賀県')
     print(active_place_city.count())
-    b=City.objects.get(city='j25')
+    b = City.objects.get(city='j25')
     active_place_city.update(city=b)
     print('j25 ok')
-        
+
     # j26登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='京都府')
+        .filter(place_adress__contains='京都府')
     print(active_place_city.count())
-    b=City.objects.get(city='j26')
+    b = City.objects.get(city='j26')
     active_place_city.update(city=b)
     print('j26 ok')
-        
+
     # j27登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='大阪府')
+        .filter(place_adress__contains='大阪府')
     print(active_place_city.count())
-    b=City.objects.get(city='j27')
+    b = City.objects.get(city='j27')
     active_place_city.update(city=b)
     print('j27 ok')
-        
+
     # j28登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='兵庫県')
+        .filter(place_adress__contains='兵庫県')
     print(active_place_city.count())
-    b=City.objects.get(city='j28')
+    b = City.objects.get(city='j28')
     active_place_city.update(city=b)
     print('j28 ok')
-        
+
     # j29登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='奈良県')
+        .filter(place_adress__contains='奈良県')
     print(active_place_city.count())
-    b=City.objects.get(city='j29')
+    b = City.objects.get(city='j29')
     active_place_city.update(city=b)
     print('j29 ok')
-        
+
     # j30登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='和歌山県')
+        .filter(place_adress__contains='和歌山県')
     print(active_place_city.count())
-    b=City.objects.get(city='j30')
+    b = City.objects.get(city='j30')
     active_place_city.update(city=b)
     print('j30 ok')
-        
+
     # j31登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='鳥取県')
+        .filter(place_adress__contains='鳥取県')
     print(active_place_city.count())
-    b=City.objects.get(city='j31')
+    b = City.objects.get(city='j31')
     active_place_city.update(city=b)
     print('j31 ok')
-        
+
     # j32登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='島根県')
+        .filter(place_adress__contains='島根県')
     print(active_place_city.count())
-    b=City.objects.get(city='j32')
+    b = City.objects.get(city='j32')
     active_place_city.update(city=b)
     print('j32 ok')
 
     # j33登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='岡山県')
+        .filter(place_adress__contains='岡山県')
     print(active_place_city.count())
-    b=City.objects.get(city='j33')
+    b = City.objects.get(city='j33')
     active_place_city.update(city=b)
     print('j33 ok')
 
     # j34登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='広島県')
+        .filter(place_adress__contains='広島県')
     print(active_place_city.count())
-    b=City.objects.get(city='j34')
+    b = City.objects.get(city='j34')
     active_place_city.update(city=b)
     print('j34 ok')
-        
+
     # j35登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='山口県')
+        .filter(place_adress__contains='山口県')
     print(active_place_city.count())
-    b=City.objects.get(city='j35')
+    b = City.objects.get(city='j35')
     active_place_city.update(city=b)
     print('j35 ok')
-        
+
     # j36登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='徳島県')
+        .filter(place_adress__contains='徳島県')
     print(active_place_city.count())
-    b=City.objects.get(city='j36')
+    b = City.objects.get(city='j36')
     active_place_city.update(city=b)
     print('j36 ok')
-        
+
     # j37登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='香川県')
+        .filter(place_adress__contains='香川県')
     print(active_place_city.count())
-    b=City.objects.get(city='j37')
+    b = City.objects.get(city='j37')
     active_place_city.update(city=b)
     print('j37 ok')
-        
+
     # j38登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='愛媛県')
+        .filter(place_adress__contains='愛媛県')
     print(active_place_city.count())
-    b=City.objects.get(city='j38')
+    b = City.objects.get(city='j38')
     active_place_city.update(city=b)
     print('j38 ok')
-        
+
     # j39登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='高知県')
+        .filter(place_adress__contains='高知県')
     print(active_place_city.count())
-    b=City.objects.get(city='j39')
+    b = City.objects.get(city='j39')
     active_place_city.update(city=b)
     print('j39 ok')
-        
+
     # j40登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='福岡県')
+        .filter(place_adress__contains='福岡県')
     print(active_place_city.count())
-    b=City.objects.get(city='j40')
+    b = City.objects.get(city='j40')
     active_place_city.update(city=b)
     print('j40 ok')
-        
+
     # j41登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='佐賀県')
+        .filter(place_adress__contains='佐賀県')
     print(active_place_city.count())
-    b=City.objects.get(city='j41')
+    b = City.objects.get(city='j41')
     active_place_city.update(city=b)
     print('j41 ok')
-        
+
     # j42登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='長崎県')
+        .filter(place_adress__contains='長崎県')
     print(active_place_city.count())
-    b=City.objects.get(city='j42')
+    b = City.objects.get(city='j42')
     active_place_city.update(city=b)
     print('j42 ok')
-        
+
     # j43登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='熊本県')
+        .filter(place_adress__contains='熊本県')
     print(active_place_city.count())
-    b=City.objects.get(city='j43')
+    b = City.objects.get(city='j43')
     active_place_city.update(city=b)
     print('j43 ok')
-        
+
     # j44登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='大分県')
+        .filter(place_adress__contains='大分県')
     print(active_place_city.count())
-    b=City.objects.get(city='j44')
+    b = City.objects.get(city='j44')
     active_place_city.update(city=b)
     print('j44 ok')
-        
+
     # j45登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='宮崎県')
+        .filter(place_adress__contains='宮崎県')
     print(active_place_city.count())
-    b=City.objects.get(city='j45')
+    b = City.objects.get(city='j45')
     active_place_city.update(city=b)
     print('j45 ok')
-        
+
     # j46登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='鹿児島県')
+        .filter(place_adress__contains='鹿児島県')
     print(active_place_city.count())
-    b=City.objects.get(city='j46')
+    b = City.objects.get(city='j46')
     active_place_city.update(city=b)
     print('j46 ok')
-        
+
     # j47登録
     active_place_city = Place.objects \
-    .filter(place_adress__contains='沖縄県')
+        .filter(place_adress__contains='沖縄県')
     print(active_place_city.count())
-    b=City.objects.get(city='j47')
+    b = City.objects.get(city='j47')
     active_place_city.update(city=b)
     print('j47 ok')
-        
-    
+
     return render(request, 'YourApp/upload.html')
+
+@login_required
+def followPlace(request):
+    
+    """場所をお気に入り登録する"""
+    # areag事の分別
+    active_place = Place.objects.get(all)
+    print(active_place)
+    active_place.update(favorite_place=active_place)
+    return redirect(request, 'home/<str:city>/')
+
+
+class CreateReviewView(LoginRequiredMixin,CreateView):
+    model = Review
+    fields=('place','title','text','rate')
+    template_name = 'review_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['place']=Place.objects.get(pk=self.kwargs['place_id'])
+        print(context)
+        return context
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+
+        return super().form_valid(form)
+    def get_success_url(self):
+       
+        return reverse('detail-place', kwargs={'pk':self.object.place.id})
