@@ -1,12 +1,13 @@
 # from logging.config import _LoggerConfiguration
+from multiprocessing import context
 from re import A
 from typing_extensions import OrderedDict
 from unittest import result
 from django.shortcuts import render, redirect
-from .models import Area, City, Place,Review
+from .models import Area, City, Place,Review, UserBank
 import csv
 import io
-from django.views.generic import CreateView, DetailView, TemplateView
+from django.views.generic import CreateView, DetailView, TemplateView,UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from .consts import ITEM_PER_PAGE
@@ -82,16 +83,14 @@ def citylist_view(request, city):
                   }
                   )
 
-def mypage_view(request, area):
-    object_list = Place.objects.filter(areas__area=area).order_by('id')
+def mypage_view(request, place_name):
+    object_list = UserBank.objects.filter(favoriteplace=place_name).order_by('id')
 
     paginator = Paginator(object_list, ITEM_PER_PAGE)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.page(page_number)
 
-    return render(request,
-                  'mypage.html',
-                  {'object_list': object_list, 'page_obj': page_obj},)
+    return render(request,'mypage.html',{'object_list': object_list, 'page_obj': page_obj},)
 
 
 class DetailPlaceView(DetailView):
@@ -131,8 +130,6 @@ def geo(request):
     return render(request, 'YourApp/upload.html')
 
 # 8区分分別
-
-
 def bunbetsu(request):
     # areag事の分別
     active_place_area = Place.objects \
@@ -582,30 +579,28 @@ def city_touroku(request):
 
     return render(request, 'YourApp/upload.html')
 
-@login_required
-def followPlace(request):
+#@login_required
+#ファンクションベースわからない
+#def followplace(request,place_name):
     
-    """場所をお気に入り登録する"""
-    # areag事の分別
-    active_place = Place.objects.get(all)
-    print(active_place)
-    active_place.update(favorite_place=active_place)
-
-
-
-
-    return redirect(request, 'home/<str:city>/')
+ #    object_place = UserBank.objects
+  #   place = get_object_or_404(Place, pk=place_name)
+   #  
+    # object_place.add(place)
+    
+     #return redirect(request,'detail-name')
 
 class CreateReviewView(LoginRequiredMixin,CreateView):
     model = Review
     fields=('place','title','text','rate')
     template_name = 'review_form.html'
-
+    #他のモデルからデータの取得
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['place']=Place.objects.get(pk=self.kwargs['place_id'])
         print(context)
         return context
+    #フォームに送信し問題ないか確認市問題なければ保存
     def form_valid(self, form):
         form.instance.user = self.request.user
 
@@ -613,3 +608,22 @@ class CreateReviewView(LoginRequiredMixin,CreateView):
     def get_success_url(self):
        
         return reverse('detail-place', kwargs={'pk':self.object.place.id})
+class FollowView(LoginRequiredMixin,CreateView):
+    model = UserBank
+    fields=('user','favorite_place')
+    template_name = 'follow.html'
+    #他のモデルからデータの取得
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['place']=Place.objects.get(pk=self.kwargs['place_id'])
+        place=[]
+        place.article_set.add(context)
+        print(context)
+        return context
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        user= form.instance.user
+        
+        print(user)
+
+        return super().form_valid(form)

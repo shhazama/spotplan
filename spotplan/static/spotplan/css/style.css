@@ -1,13 +1,14 @@
 a{
     text-decoration:none;
 }
-.info{
-    margin:100px auto; 
-    height:100px;
+
+#info{
+    margin: 5px ; 
+    height: 5px;
 }
 
 #map {
-     
+    margin:auto;
     height: 500px;
   }
   
@@ -16,3 +17,4 @@ a{
 }
 
 .view{height: 100px;}
+

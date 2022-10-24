@@ -4,10 +4,14 @@
     <h2 class="text success">{{ object.place_name}}</h2>
     <h3>{{object.headline}}</h3>
     <p>{{ object.place_detail}}</p>
+ 
+    <img src={{object.thumbnail}}>
+    
     {% if request.user.is_authenticated %}
     <a href ="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
+    <a href="{% url 'follow' object.pk %}" class="btn btn-primary">お気に入り追加</a>
     {% endif %}
-    <img src={{object.thumbnail}}>
+
     <table border="1" class="info">
         <tr>
             <th>{{object.place_adress}}</th>

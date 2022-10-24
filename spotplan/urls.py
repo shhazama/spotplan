@@ -15,7 +15,7 @@ urlpatterns = [
     path('place/<int:pk>/detail/',views.DetailPlaceView.as_view(),name='detail-place'),
     path('',views.HomeView.as_view(),name='home'),
     path('mypage/',views.mypage_view,name='mypage'),
-    path('follow/', views.followPlace, name='follow'), 
+    path('detail/<int:place_id>/follow/', views.FollowView.as_view(),name='follow'), 
     path('detail/<int:place_id>/review/', views.CreateReviewView.as_view(),name='review'),
     # :
 ]
