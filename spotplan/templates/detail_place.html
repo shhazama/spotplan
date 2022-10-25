@@ -4,11 +4,11 @@
     <h2 class="text success">{{ object.place_name}}</h2>
     <h3>{{object.headline}}</h3>
     <p>{{ object.place_detail}}</p>
- 
+
     <img src={{object.thumbnail}}>
-    
+
     {% if request.user.is_authenticated %}
-    <a href ="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
+    <a href="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
     <a href="{% url 'follow' object.pk %}" class="btn btn-primary">お気に入り追加</a>
     {% endif %}
 
@@ -33,8 +33,12 @@
 
     <script>
         // Initialize and add the map
+        var map = null;
+        var directionsService = null;
+        var directionsRenderer = null;
         function initMap() {
-
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
             //const geocoder = new google.maps.Geocoder();
 
             //const address = '{{object.place_adress}}';
@@ -42,7 +46,7 @@
             const lng = {{object.geo_lng}};
             const position = { lat: lat, lng: lng };
 
-            const map = new google.maps.Map(document.getElementById("map"), {
+            map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 12,
                 center: position
             });
@@ -51,20 +55,72 @@
                 map,
 
             });
+            directionsRenderer.setMap(map);
             
 
         }
 
-
         window.initMap = initMap;
 
+        function currentLocation() {
+            function success(pos) {
+                var crd = pos.coords;
+                var selectedMode = document.getElementById('mode').value;
+                var request = {
+                    travelMode: google.maps.TravelMode[selectedMode]
+                };
+                
+      
+  
+
+                console.log('Your current position is:');
+                console.log(`Latitude : ${crd.latitude}`);
+                console.log(`Longitude: ${crd.longitude}`);
+                console.log(`More or less ${crd.accuracy} meters.`);
+
+                var request = {
+                    origin: new google.maps.LatLng(crd.latitude, crd.longitude),
+                    destination: new google.maps.LatLng({{object.geo_lat}}, {{object.geo_lng}}),
+                    travelMode: google.maps.TravelMode[selectedMode]
+                };
+                directionsService.route(request, function(response, status) {
+                    if (status == 'OK') {
+                        directionsRenderer.setDirections(response);
+                        console.log(response);
+                        document.getElementById('route-result').textContent = response.routes[0].legs[0].distance.text;
+                        document.getElementById('route-result-time').textContent = response.routes[0].legs[0].duration.text;
+                        // location.href = `${location.href}?hoge=aaa&fuga=bbb`;
+                    }
+                });
+            }
+
+            function error(err) {
+                console.warn(`ERROR(${err.code}): ${err.message}`);
+            }
+            navigator.geolocation.getCurrentPosition(success, error);
+        }
     </script>
     <script
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgd0aDbXECj_riwa3iG7HnqtSSGptQpYM&callback=initMap&v=weekly"
         defer></script>
 
+    <div class="d-grid gap-2 d-md-block m-3">
+        <div>
+            <strong>移動手段: </strong>
+            <select id="mode" onchange="currentLocation();">
+              <option value="DRIVING">自動車</option>
+              <option value="WALKING">徒歩</option>
+              <option value="BICYCLING">自転車</option>
+              <option value="TRANSIT">交通機関×</option>
+            </select>
+            </div>
+       
+        <button class="btn btn-primary" onclick="currentLocation();">現在地からの経路を検索</button>
+    </div>
+    <a>移動距離</a>
+    <div id="route-result"></div>
+    <a>移動時間</a>
+    <div id="route-result-time"></div>
+
 </div>
-{% if request.user.is_authenticated %}
-<a href ="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
-{% endif %}
 {% endblock content %}
