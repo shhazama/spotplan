@@ -83,14 +83,18 @@ def citylist_view(request, city):
                   }
                   )
 
-def mypage_view(request, place_name):
-    object_list = UserBank.objects.filter(favoriteplace=place_name).order_by('id')
+def mypage_view(request, area):
+    object_list = Place.objects.filter(areas__area=area).order_by('id')
 
     paginator = Paginator(object_list, ITEM_PER_PAGE)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.page(page_number)
 
-    return render(request,'mypage.html',{'object_list': object_list, 'page_obj': page_obj},)
+    return render(request,
+                  'list_place.html',
+                  {'object_list': object_list, 'page_obj': page_obj},)
+
+    
 
 
 class DetailPlaceView(DetailView):
