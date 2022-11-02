@@ -112,7 +112,7 @@ class DetailPlaceView(generic.DetailView):
         context['likeplace_count'] = likeplace_count
         # ログイン中のユーザーがイイねしているかどうか
         if self.object.likeplace_set.filter(user=self.request.user).exists():
-            context['is_user_likplace'] = True
+            context['is_user_likeplace'] = True
         else:
             context['is_user_likeplace'] = False
 

@@ -49,7 +49,7 @@
             /* ポストに対するイイね */
             document.getElementById('ajax-likeplace').addEventListener('click', e => {
               e.preventDefault();
-              const url = '{% url "likeplace" %}';
+                          const url = '{% url "likeplace" %}';
               fetch(url, {
                 method: 'POST',
                 body: `place_pk={{place.pk}}`,
@@ -66,12 +66,12 @@
                 // イイね数を書き換える
                 const counter = document.getElementById('likeplace-count')
                 counter.textContent = response.likeplace_count
-                const icon = document.getElementById('like-place-icon')
+                const icon = document.getElementById('likeplace-icon')
                // 作成した場合はハートを塗る
                if (response.method == 'create') {
                   icon.classList.remove('far')
                   icon.classList.add('fas')
-                  icon.id = 'like-place-icon'
+                  icon.id = 'likeplace-icon'
                } else {
                   icon.classList.remove('fas')
                   icon.classList.add('far')
