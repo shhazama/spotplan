@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from.consts import MAX_RATE
-
+from django.utils import timezone
 
 RATE_CHOICES =[(x,str(x)) for x in range(0, MAX_RATE + 1)]
 REQUIRED_TIME = (('1時間', '1時間'), ('2～3時間','2～3時間'), ('半日','半日'),('日中','日中'))
@@ -46,6 +46,12 @@ class Place(models.Model):
     geo_lat=models.FloatField(null=True,blank=True )
     geo_lng=models.FloatField(null=True,blank=True )
 
+
+class LikePlace(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    favorite_place=models.ForeignKey(Place, on_delete=models.CASCADE)  
+    timestamp = models.DateTimeField(default=timezone.now)
+#未使用
 class UserBank(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     favorite_place=models.ManyToManyField(Place)  

@@ -3,11 +3,12 @@ from multiprocessing import context
 from re import A
 from typing_extensions import OrderedDict
 from unittest import result
-from django.shortcuts import render, redirect
-from .models import Area, City, Place,Review, UserBank
+from django.shortcuts import render,redirect, get_object_or_404
+from .models import Area, City, Place,Review, UserBank,LikePlace
 import csv
 import io
-from django.views.generic import CreateView, DetailView, TemplateView,UpdateView
+from django.views import generic
+from django.views.generic import CreateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from .consts import ITEM_PER_PAGE
@@ -15,7 +16,7 @@ from django.db.models import Q, Avg
 import googlemaps
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, get_object_or_404
+from django.http import JsonResponse
 from django.urls import reverse
 
 
@@ -84,7 +85,7 @@ def citylist_view(request, city):
                   )
 
 def mypage_view(request):
-    object_list = UserBank.objects.get(all)
+    object_list = LikePlace.objects.get(all)
 
     paginator = Paginator(object_list, ITEM_PER_PAGE)
     page_number = request.GET.get('page', 1)
@@ -96,11 +97,44 @@ def mypage_view(request):
 
     
 
+class PlaceList(generic.ListView):
+    template_name = 'placelist.html'
+    model =Place
 
-class DetailPlaceView(DetailView):
+class DetailPlaceView(generic.DetailView):
     template_name = 'detail_place.html'
     model = Place
+  
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        likeplace_count = self.object.likeplace_set.count()
+        # ポストに対するイイね数
+        context['likeplace_count'] = likeplace_count
+        # ログイン中のユーザーがイイねしているかどうか
+        if self.object.likeplace_set.filter(user=self.request.user).exists():
+            context['is_user_likplace'] = True
+        else:
+            context['is_user_likeplace'] = False
 
+        return context
+def likeplace(request):
+    place_pk = request.POST.get('place_pk')
+    context = {
+        'user': f'{request.user}',
+    }
+    place = get_object_or_404(Place, pk=place_pk)
+    like = LikePlace.objects.filter(favorite_place=place, user=request.user)
+
+    if like.exists():
+        like.delete()
+        context['method'] = 'delete'
+    else:
+        like.create(favorite_place=place, user=request.user)
+        context['method'] = 'create'
+
+    context['likeplace_count'] =place.likeplace_set.count()
+
+    return JsonResponse(context)
 
 class HomeView(TemplateView):
     template_name = 'home.html'

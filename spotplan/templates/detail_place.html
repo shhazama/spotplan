@@ -1,17 +1,15 @@
 {% extends 'base.html' %}
+{% block extrajs %}
+
+{% endblock %}
 {% block content %}
 <div class="p-4 m-4 bg-light border border-success rounded">
     <h2 class="text success">{{ object.place_name}}</h2>
+    
     <h3>{{object.headline}}</h3>
     <p>{{ object.place_detail}}</p>
 
     <img src={{object.thumbnail}}>
-
-    {% if request.user.is_authenticated %}
-    <a href="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
-    <a href="{% url 'follow' object.pk %}" class="btn btn-primary">お気に入り追加</a>
-    {% endif %}
-
     <table border="1" class="info">
         <tr>
             <th>{{object.place_adress}}</th>
@@ -29,6 +27,66 @@
         </tr>
     </table>
 
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
+    <div class="card-header">
+        
+        {% if is_user_likeplace %}
+        <button type="button" id="ajax-likeplace" style="border:none;background:none">
+            <!-- すでにイイねしている時はfasクラス -->
+            <i class="fas fa-heart text-danger" id="likeplace-icon"></i>
+        </button>
+        {% else %}
+        <button type="button" id="ajax-likeplace" style="border:none;background:none">
+            <!-- イイねしていないときはfarクラス -->
+            <i class="far fa-heart text-danger" id="likeplace-icon"></i>
+        </button>
+        {% endif %}
+        <!-- イイねの数 -->
+        <span id="likeplace-count">{{ likeplace_count }}</span>
+        <span>件のイイね</span>
+        <script type="text/javascript">
+            /* ポストに対するイイね */
+            document.getElementById('ajax-likeplace').addEventListener('click', e => {
+              e.preventDefault();
+              const url = '{% url "likeplace" %}';
+              fetch(url, {
+                method: 'POST',
+                body: `place_pk={{place.pk}}`,
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+                  'X-CSRFToken': '{{ csrf_token }}',
+                },
+          
+              }).then(response => {
+                return response.json();
+              }).then(response => {
+                // 通信後の処理、とりあえずレスポンスを表示
+                console.log(response);
+                // イイね数を書き換える
+                const counter = document.getElementById('likeplace-count')
+                counter.textContent = response.likeplace_count
+                const icon = document.getElementById('like-place-icon')
+               // 作成した場合はハートを塗る
+               if (response.method == 'create') {
+                  icon.classList.remove('far')
+                  icon.classList.add('fas')
+                  icon.id = 'like-place-icon'
+               } else {
+                  icon.classList.remove('fas')
+                  icon.classList.add('far')
+                  icon.id = 'likeplace-icon'
+               }
+              }).catch(error => {
+                console.log(error);
+              });
+            });
+          </script>
+    </div>
+    {% endif %}
+
+    
+
     <div id="map"></div>
 
     <script>
@@ -42,17 +100,17 @@
             //const geocoder = new google.maps.Geocoder();
 
             //const address = '{{object.place_adress}}';
-            const lat = {{object.geo_lat}};
-            const lng = {{object.geo_lng}};
+            const lat = {{ object.geo_lat }};
+            const lng = {{ object.geo_lng }};
             const position = { lat: lat, lng: lng };
 
             map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 12,
-                center: position
+            zoom: 12,
+            center: position
             });
             new google.maps.Marker({
-                position: position,
-                map,
+            position: position,
+            map,
 
             });
             directionsRenderer.setMap(map);
@@ -69,9 +127,9 @@
                 var request = {
                     travelMode: google.maps.TravelMode[selectedMode]
                 };
-                
-      
-  
+
+
+
 
                 console.log('Your current position is:');
                 console.log(`Latitude : ${crd.latitude}`);
@@ -80,22 +138,22 @@
 
                 var request = {
                     origin: new google.maps.LatLng(crd.latitude, crd.longitude),
-                    destination: new google.maps.LatLng({{object.geo_lat}}, {{object.geo_lng}}),
+                    destination: new google.maps.LatLng({{ object.geo_lat }}, {{ object.geo_lng }}),
                     travelMode: google.maps.TravelMode[selectedMode]
                 };
-                directionsService.route(request, function(response, status) {
-                    if (status == 'OK') {
-                        directionsRenderer.setDirections(response);
-                        console.log(response);
-                        document.getElementById('route-result').textContent = response.routes[0].legs[0].distance.text;
-                        document.getElementById('route-result-time').textContent = response.routes[0].legs[0].duration.text;
-                        // location.href = `${location.href}?hoge=aaa&fuga=bbb`;
+                directionsService.route(request, function (response, status) {
+                   if (status == 'OK') {
+                      directionsRenderer.setDirections(response);
+                      console.log(response);
+                      document.getElementById('route-result').textContent = response.routes[0].legs[0].distance.text;
+                      document.getElementById('route-result-time').textContent = response.routes[0].legs[0].duration.text;
+                  // location.href = `${location.href}?hoge=aaa&fuga=bbb`;
                     }
                 });
             }
 
             function error(err) {
-                console.warn(`ERROR(${err.code}): ${err.message}`);
+              console.warn(`ERROR(${err.code}): ${err.message}`);
             }
             navigator.geolocation.getCurrentPosition(success, error);
         }
@@ -108,19 +166,19 @@
         <div>
             <strong>移動手段: </strong>
             <select id="mode" onchange="currentLocation();">
-              <option value="DRIVING">自動車</option>
-              <option value="WALKING">徒歩</option>
-              <option value="BICYCLING">自転車</option>
-              <option value="TRANSIT">交通機関×</option>
+                <option value="DRIVING">自動車</option>
+                <option value="WALKING">徒歩</option>
+                <option value="BICYCLING">自転車</option>
+                <option value="TRANSIT">交通機関×</option>
             </select>
-            </div>
-       
+        </div>
+
         <button class="btn btn-primary" onclick="currentLocation();">現在地からの経路を検索</button>
     </div>
     <a>移動距離</a>
     <div id="route-result"></div>
     <a>移動時間</a>
     <div id="route-result-time"></div>
-
+    <a href="https://www.google.com/maps/dir/?api=1&destination={{object.place_adress}}&travelmode=trasit" target="_blank" class="btn btn-primary">交通機関を検索</a>
 </div>
 {% endblock content %}

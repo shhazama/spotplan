@@ -3,8 +3,8 @@ a{
 }
 
 #info{
-    margin: 5px ; 
-    height: 5px;
+    margin: auto ; 
+    height: auto;
 }
 
 #map {
@@ -18,3 +18,4 @@ a{
 
 .view{height: 100px;}
 
+.text-clear{color :fuchsia}

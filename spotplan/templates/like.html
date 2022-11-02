@@ -1,0 +1,9 @@
+<form action="{% url 'like' %}" method="POST">
+    {% csrf_token %}
+    {% if place.id in liked_list %}
+        <button id="like" name="{{place.id}}"><i class="fas fa-lg fa-heart like-red"></i></button>
+    {% else %}
+        <button id="like" name="{{place.id}}"><i class="far fa-lg fa-heart"></i></button>      
+    {% endif %}
+</form>
+<h2 name="{{place.id}}-count" class="count"> {{ favoriteplace.like_set.count }} </h2>
