@@ -16,7 +16,8 @@
         });
 
         const placeList = [];
-       {% for item in page_obj %}
+        const infowindow = new google.maps.InfoWindow();
+       {% for item in object_list %}
          placeList.push({
            url: '{% url 'detail-place' item.pk %}',
            
@@ -31,11 +32,11 @@
              position: { lat: place.lat, lng: place.lng },
              map,
         });
-        const contentString = `<a href="${place.url}">${place.name}</a>`;
-        const infowindow = new google.maps.InfoWindow({
-            content: contentString,
-        });
+        
         marker.addListener("click", () => {
+            map.panTo(marker.position);
+            const contentString = `<a href="${place.url}">${place.name}</a>`;
+            infowindow.setContent(contentString);
             infowindow.open({
                 anchor: marker,
                 map,
