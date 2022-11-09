@@ -19,5 +19,6 @@ urlpatterns = [
     path('detail/<int:place_id>/follow/', views.FollowView.as_view(),name='follow'), 
     path('detail/<int:place_id>/review/', views.CreateReviewView.as_view(),name='review'),
     path('placelist/', views.PlaceList.as_view(), name='placelist'),
+    
     # :
 ]

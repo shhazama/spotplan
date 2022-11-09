@@ -8,7 +8,7 @@ from .models import Area, City, Place,Review, UserBank,LikePlace
 import csv
 import io
 from django.views import generic
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, TemplateView,ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from .consts import ITEM_PER_PAGE
@@ -85,26 +85,24 @@ def citylist_view(request, city):
                   )
 
 def mypage_view(request):
-    object_list = LikePlace.objects.get(all)
-
-    paginator = Paginator(object_list, ITEM_PER_PAGE)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.page(page_number)
-
-    return render(request,
-                  'mypage.html',
-                  {'object_list': object_list, 'page_obj': page_obj},)
-
+  place = Place.objects.order_by('-id')
+  likeplace = LikePlace.objects.filter(user=request.user)
+  paginator = Paginator(likeplace, ITEM_PER_PAGE)
+  page_number = request.GET.get('page', 1)
+  page_obj = paginator.page(page_number)
+  print(likeplace)
+  return render(request,'mypage.html',{'likeplace': likeplace, 'page_obj': page_obj,'place_obj': place})
     
 
 class PlaceList(generic.ListView):
     template_name = 'placelist.html'
     model =Place
 
+
 class DetailPlaceView(generic.DetailView):
     template_name = 'detail_place.html'
     model = Place
-  
+    @login_required
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         likeplace_count = self.object.likeplace_set.count()
@@ -117,6 +115,7 @@ class DetailPlaceView(generic.DetailView):
             context['is_user_likeplace'] = False
 
         return context
+@login_required
 def likeplace(request):
     place_pk = request.POST.get('place_pk')
     context = {

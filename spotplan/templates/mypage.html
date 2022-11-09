@@ -4,15 +4,18 @@
 {% block content %}
 
 <h2>お気に入りの場所</h2>
-<section class="mt-5">
-    {% for place in object_list %}
-    <article class="article mb-5">
-      <h2 class="mt-2">
-        <a class="text-dark" href="{% url 'detail-place' place.pk %}"> #{{ place.pk }} {{ place.title }}</a>
-      </h2>
-      <i class="far fa-calendar-alt"></i>
-      <span class="ms-1">{{ place.created_at | date:'Y-m-d' }}</span>
-    </article>
-    {% endfor %}
+{% for item in likeplace%}
+<div class="p-4 m-4 bg-light border border-success rounded">
+    <input type="checkbox">
+    <h2 class="text-success">{{item.favorite_place.place_name}}</h2>
+    <h5>{{item.favorite_place.headline}}</h5>
+    <h6 class="adress">場所:{{item.favorite_place.place_adress}}</h6>
+    <h6>所要時間:{{item.favorite_place.required_time}}</h6>
+    
+    <img src='{{item.favorite_place.thumbnail}}' class="view">
+  
+    
+</div>
+{% endfor %}
 
 {% endblock content%}
