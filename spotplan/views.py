@@ -56,6 +56,7 @@ def upload(request):
 
 
 def list_view(request, area):
+
     object_list = Place.objects.filter(areas__area=area).order_by('id')
 
     paginator = Paginator(object_list, ITEM_PER_PAGE)
@@ -69,11 +70,12 @@ def list_view(request, area):
 
 def citylist_view(request, city):
     object_list = Place.objects.filter(city__city=city).order_by('id')
+    geo_lat_avg = object_list.aggregate(geo_lat_avg=Avg('geo_lat'))
+    geo_lng_avg = object_list.aggregate(geo_lng_avg=Avg('geo_lng'))
+    
     paginator = Paginator(object_list, ITEM_PER_PAGE)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.page(page_number)
-    geo_lat_avg = page_obj.object_list.aggregate(geo_lat_avg=Avg('geo_lat'))
-    geo_lng_avg = page_obj.object_list.aggregate(geo_lng_avg=Avg('geo_lng'))
 
     return render(request,
                   'citylist_place.html',
