@@ -16,7 +16,6 @@ urlpatterns = [
     path('',views.HomeView.as_view(),name='home'),
     path('like_for_place/', views.likeplace, name='likeplace'),  
     path('mypage/',views.mypage_view,name='mypage'),
-    path('detail/<int:place_id>/follow/', views.FollowView.as_view(),name='follow'), 
     path('detail/<int:place_id>/review/', views.CreateReviewView.as_view(),name='review'),
     path('placelist/', views.PlaceList.as_view(), name='placelist'),
     

@@ -4,7 +4,7 @@ from re import A
 from typing_extensions import OrderedDict
 from unittest import result
 from django.shortcuts import render,redirect, get_object_or_404
-from .models import Area, City, Place,Review, UserBank,LikePlace
+from .models import Area, City, Place,Review,LikePlace
 import csv
 import io
 from django.views import generic
@@ -90,7 +90,7 @@ def mypage_view(request):
   paginator = Paginator(likeplace, ITEM_PER_PAGE)
   page_number = request.GET.get('page', 1)
   page_obj = paginator.page(page_number)
-  print(likeplace)
+  
   return render(request,'mypage.html',{'likeplace': likeplace, 'page_obj': page_obj,'place_obj': place})
     
 
@@ -102,14 +102,14 @@ class PlaceList(generic.ListView):
 class DetailPlaceView(generic.DetailView):
     template_name = 'detail_place.html'
     model = Place
-    @login_required
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         likeplace_count = self.object.likeplace_set.count()
         # ポストに対するイイね数
         context['likeplace_count'] = likeplace_count
         # ログイン中のユーザーがイイねしているかどうか
-        if self.object.likeplace_set.filter(user=self.request.user).exists():
+        if self.request.user.is_authenticated and self.object.likeplace_set.filter(user=self.request.user).exists():
             context['is_user_likeplace'] = True
         else:
             context['is_user_likeplace'] = False
@@ -616,17 +616,6 @@ def city_touroku(request):
 
     return render(request, 'YourApp/upload.html')
 
-#@login_required
-#ファンクションベースわからない
-#def followplace(request,place_name):
-    
- #    object_place = UserBank.objects
-  #   place = get_object_or_404(Place, pk=place_name)
-   #  
-    # object_place.add(place)
-    
-     #return redirect(request,'detail-name')
-
 class CreateReviewView(LoginRequiredMixin,CreateView):
     model = Review
     fields=('place','title','text','rate')
@@ -645,22 +634,4 @@ class CreateReviewView(LoginRequiredMixin,CreateView):
     def get_success_url(self):
        
         return reverse('detail-place', kwargs={'pk':self.object.place.id})
-class FollowView(LoginRequiredMixin,CreateView):
-    model = UserBank
-    fields=('user','favorite_place')
-    template_name = 'follow.html'
-    #他のモデルからデータの取得
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['place']=Place.objects.get(pk=self.kwargs['place_id'])
-        place=[]
-        place.article_set.add(context)
-        print(context)
-        return context
-    def form_valid(self, form):
-        form.instance.user = self.request.user
-        user= form.instance.user
-        
-        print(user)
 
-        return super().form_valid(form)

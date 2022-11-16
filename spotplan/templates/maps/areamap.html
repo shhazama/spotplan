@@ -18,7 +18,7 @@
         const placeList = [];
        {% for item in page_obj %}
          placeList.push({
-           url: '{% url 'detail-place' item.pk %}',
+           url: '{% url 'detail-place' item.favorite_place.pk %}',
            
            name: '{{item.place_name}}',
            lat: {{ item.geo_lat }},

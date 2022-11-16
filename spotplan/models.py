@@ -51,23 +51,7 @@ class LikePlace(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     favorite_place=models.ForeignKey(Place, on_delete=models.CASCADE)  
     timestamp = models.DateTimeField(default=timezone.now)
-#未使用
-class UserBank(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    favorite_place=models.ManyToManyField(Place)  
 
-#未使用（フォロー関係時に使用）    
-class FavUser(models.Model):
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='send_user')
-
-    user2 = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='receive_user')
 
 class Review(models.Model) :
     place=models.ForeignKey(Place, on_delete=models.CASCADE)

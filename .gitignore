@@ -3,3 +3,5 @@ OIP_1.jfif
 test.csv
 test前.csv
 __pycache__/
+db.sqlite3
+venv
