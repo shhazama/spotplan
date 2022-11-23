@@ -3,19 +3,59 @@ a{
 }
 
 #info{
-    margin: auto ; 
+    margin: 100px ; 
     height: auto;
 }
 
 #map {
-    margin:auto;
+    margin:50px;
     height: 500px;
+  }
+
+#mymap {
+    margin-top:20px;
+    margin-bottom: 10px;
+    height: 700px;
+  }
+
+
+#location_map {
+    margin:auto;
+    height: 800px;;
   }
   
 #citymap{
     height: 600px;
 }
 
-.view{height: 100px;}
+.view{height: 200px;
+  /*float:right;*/
+
+}
+
 
 .text-clear{color :fuchsia}
+
+body{
+  /* 背景色指定 */
+background-color:#e1e5e7;
+color:#070505;
+}
+.parent {
+  display: flex;
+  margin: auto;
+  }
+
+
+.syousai {
+ margin-left: 10px;
+ 
+}
+.koumoku {
+  margin-left: 10px;
+  
+ }
+ .map_view{
+  height: 100px;
+  
+ }

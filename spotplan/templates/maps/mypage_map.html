@@ -1,11 +1,11 @@
-<div id="map"></div>
+<div id="mymap"></div>
 
 <script>
     // Initialize and add the map
     function initMap() {
          const directionsService = new google.maps.DirectionsService();
          const directionsRenderer = new google.maps.DirectionsRenderer();         
-         const map = new google.maps.Map(document.getElementById("map"), {
+         const map = new google.maps.Map(document.getElementById("mymap"), {
           zoom: 5,
           center:{ lat:37.5, lng: 139 },
           //center: mapLatLng
@@ -49,7 +49,7 @@
         //経路図の追加
         directionsRenderer.setMap(map);
 
-          (document.getElementById("submit") ).addEventListener(
+          document.getElementById("submit").addEventListener(
            "click",
            () => {
               calculateAndDisplayRoute(directionsService, directionsRenderer);
@@ -61,8 +61,8 @@
   directionsService,
   directionsRenderer
 ) {
-  const wvarnsWaypoint= [];
-  const checkboxArray = document.getElementById(
+   const waypts= [];
+   const checkboxArray = document.getElementById(
     "waypoints"
   );
 
@@ -85,11 +85,13 @@
     })
     .then((response) => {
       directionsRenderer.setDirections(response);
+      console.log(response);
 
       const route = response.routes[0];
       const summaryPanel = document.getElementById(
         "directions-panel"
       ) ;
+      
 
       summaryPanel.innerHTML = "";
 
@@ -98,10 +100,11 @@
         const routeSegment = i + 1;
 
         summaryPanel.innerHTML +=
-          "<b>Route Segment: " + routeSegment + "</b><br>";
-        summaryPanel.innerHTML += route.legs[i].start_address + " to ";
-        summaryPanel.innerHTML += route.legs[i].end_address + "<br>";
-        summaryPanel.innerHTML += route.legs[i].distance.text + "<br><br>";
+          "<b>経路 " + routeSegment + "</b><br>";
+        summaryPanel.innerHTML += route.legs[i].start_address+"<br>" ;
+        summaryPanel.innerHTML += "→" +route.legs[i].end_address +" <br>";
+        summaryPanel.innerHTML += "  移動距離 : "+route.legs[i].distance.text + "<br>";
+        summaryPanel.innerHTML += "  移動時間 : " + route.legs[i].duration.text + "<br><br>";
       }
     })
     .catch((e) => window.alert("Directions request failed due to " + status));}

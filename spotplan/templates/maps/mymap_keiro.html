@@ -24,7 +24,7 @@ function calculateAndDisplayRoute(
   directionsService
   ,directionsRenderer
 ) {
-  const wvarnsWaypoint= [];
+  const waypts: google.maps.DirectionsWaypoint[] = [];
   const checkboxArray = document.getElementById(
     "waypoints"
   );

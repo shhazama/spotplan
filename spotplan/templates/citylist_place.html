@@ -7,18 +7,17 @@
 <div class="p-4 m-4 bg-light border border-success rounded">
   <h2 class="text-success">{{item.place_name}}</h2>
   <h5>{{item.headline}}</h5>
-  <h6 class="adress">場所:{{item.place_adress}}</h6>
-  <h6>所要時間:{{item.required_time}}</h6>
-  
-  <img src={{item.thumbnail}} class="view">
+  <div class="parent">
+    <div><img src={{item.thumbnail}} class="view"></div>
 
-  <div class="mt-3">
-
-    <a href="{% url 'detail-place' item.pk %}" class="btn btn-primary">詳細へ</a>
-    
-
+    <div class="syousai">
+      <h6 class="adress">場所:{{item.place_adress}}</h6>
+      <div class="mt-3">
+        <a href="{% url 'detail-place' item.pk %}" class="btn btn-primary">詳細へ</a>    
+      </div>
+      
+    </div>
   </div>
-
 </div>
 {% endfor %}
 

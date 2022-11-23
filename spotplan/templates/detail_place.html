@@ -8,83 +8,92 @@
     
     <h3>{{object.headline}}</h3>
     <p>{{ object.place_detail}}</p>
-
-    <img src={{object.thumbnail}}>
-    <table border="1" class="info">
-        <tr>
-            <th>{{object.place_adress}}</th>
-        <tr>
-            <th>{{object.place_opening}}</th>
-        </tr>
-        <tr>
-            <th>{{object.place_access}}</th>
-        </tr>
-        <tr>
-            <th>{{object.place_parking}}</th>
-        </tr>
-        <tr>
-            <th>{{object.place_url}}</th>
-        </tr>
-    </table>
-
-    {% if request.user.is_authenticated %}
-    <a href="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
-    <div class="card-header">
+    <div class="parent">
+        <div>
+            <img src={{object.thumbnail}}>
+        </div>
+        <div class="syousai">
+            <table border="1" class="info">
+                <tr>
+                    <th>{{object.place_adress}}</th>
+                <tr>
+                    <th>{{object.place_opening}}</th>
+                </tr>
+                <tr>
+                    <th>{{object.place_access}}</th>
+                </tr>
+                <tr>
+                    <th>{{object.place_parking}}</th>
+                </tr>
+                <tr>
+                    <th>{{object.place_url}}</th>
+                </tr>
+            </table>
         
-        {% if is_user_likeplace %}
-        <button type="button" id="ajax-likeplace" style="border:none;background:none">
-            <!-- すでにイイねしている時はfasクラス -->
-            <i class="fas fa-heart text-danger" id="likeplace-icon"></i>
-        </button>
-        {% else %}
-        <button type="button" id="ajax-likeplace" style="border:none;background:none">
-            <!-- イイねしていないときはfarクラス -->
-            <i class="far fa-heart text-danger" id="likeplace-icon"></i>
-        </button>
-        {% endif %}
-        <!-- イイねの数 -->
-        <span id="likeplace-count">{{ likeplace_count }}</span>
-        <span>件のイイね</span>
-        <script type="text/javascript">
-            /* ポストに対するイイね */
-            document.getElementById('ajax-likeplace').addEventListener('click', e => {
-              e.preventDefault();
-                          const url = '{% url "likeplace" %}';
-              fetch(url, {
-                method: 'POST',
-                body: `place_pk={{place.pk}}`,
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-                  'X-CSRFToken': '{{ csrf_token }}',
-                },
-          
-              }).then(response => {
-                return response.json();
-              }).then(response => {
-                // 通信後の処理、とりあえずレスポンスを表示
-                console.log(response);
-                // イイね数を書き換える
-                const counter = document.getElementById('likeplace-count')
-                counter.textContent = response.likeplace_count
-                const icon = document.getElementById('likeplace-icon')
-               // 作成した場合はハートを塗る
-               if (response.method == 'create') {
-                  icon.classList.remove('far')
-                  icon.classList.add('fas')
-                  icon.id = 'likeplace-icon'
-               } else {
-                  icon.classList.remove('fas')
-                  icon.classList.add('far')
-                  icon.id = 'likeplace-icon'
-               }
-              }).catch(error => {
-                console.log(error);
-              });
-            });
-          </script>
-    </div>
-    {% endif %}
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'review' object.pk %}" class="btn btn-primary">レビューする</a>
+            <div class="card-header">
+                
+                {% if is_user_likeplace %}
+                <button type="button" id="ajax-likeplace" style="border:none;background:none">
+                    <!-- すでにイイねしている時はfasクラス -->
+                    <i class="fas fa-heart text-danger" id="likeplace-icon"></i>
+                </button>
+                {% else %}
+                <button type="button" id="ajax-likeplace" style="border:none;background:none">
+                    <!-- イイねしていないときはfarクラス -->
+                    <i class="far fa-heart text-danger" id="likeplace-icon"></i>
+                </button>
+                {% endif %}
+                <!-- イイねの数 -->
+                <span id="likeplace-count">{{ likeplace_count }}</span>
+                <span>件のイイね</span>
+                <script type="text/javascript">
+                    /* ポストに対するイイね */
+                    document.getElementById('ajax-likeplace').addEventListener('click', e => {
+                      e.preventDefault();
+                                  const url = '{% url "likeplace" %}';
+                      fetch(url, {
+                        method: 'POST',
+                        body: `place_pk={{place.pk}}`,
+                        headers: {
+                          'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+                          'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                  
+                      }).then(response => {
+                        return response.json();
+                      }).then(response => {
+                        // 通信後の処理、とりあえずレスポンスを表示
+                        console.log(response);
+                        // イイね数を書き換える
+                        const counter = document.getElementById('likeplace-count')
+                        counter.textContent = response.likeplace_count
+                        const icon = document.getElementById('likeplace-icon')
+                       // 作成した場合はハートを塗る
+                       if (response.method == 'create') {
+                          icon.classList.remove('far')
+                          icon.classList.add('fas')
+                          icon.id = 'likeplace-icon'
+                       } else {
+                          icon.classList.remove('fas')
+                          icon.classList.add('far')
+                          icon.id = 'likeplace-icon'
+                       }
+                      }).catch(error => {
+                        console.log(error);
+                      });
+                    });
+                  </script>
+            </div>
+            {% endif %}
+        
 
+        </div>
+    </div>
+
+    
+    
     
 
     <div id="map"></div>

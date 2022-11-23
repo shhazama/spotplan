@@ -18,6 +18,7 @@ urlpatterns = [
     path('mypage/',views.mypage_view,name='mypage'),
     path('detail/<int:place_id>/review/', views.CreateReviewView.as_view(),name='review'),
     path('placelist/', views.PlaceList.as_view(), name='placelist'),
+    path('map/place',views.LocationMapView.as_view(),name='location-map'),
     
     # :
 ]

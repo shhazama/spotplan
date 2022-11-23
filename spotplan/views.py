@@ -86,7 +86,7 @@ def citylist_view(request, city):
 
 def mypage_view(request):
   place = Place.objects.order_by('-id')
-  likeplace = LikePlace.objects.filter(user=request.user)
+  likeplace = LikePlace.objects.filter(user=request.user).order_by('favorite_place__id')
   paginator = Paginator(likeplace, ITEM_PER_PAGE)
   page_number = request.GET.get('page', 1)
   page_obj = paginator.page(page_number)
@@ -634,4 +634,10 @@ class CreateReviewView(LoginRequiredMixin,CreateView):
     def get_success_url(self):
        
         return reverse('detail-place', kwargs={'pk':self.object.place.id})
+
+
+class LocationMapView(generic.ListView):
+    template_name = 'location_map.html'
+    model = Place
+
 

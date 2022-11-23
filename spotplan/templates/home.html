@@ -1,19 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
-
-
-
-<!----- header----->
-<header>ヘッダー</header>
-<nav>ナビ</nav>
-<!----- /header ----->
-
-<!----- main ----->
 <article>
     <h1>SpotPlan</h1>
     <section>
-        <h2>見出し２</h2>
-        <p>コンテンツの内容</p>
+        <h2>都道府県から検索</h2>
         <script type="text/javascript" src="https://unpkg.com/japan-map-js@1.0.1/dist/jpmap.min.js"></script>
 
         <div id="my-map">
@@ -135,8 +125,7 @@
 
 
 
-
-
+    <a href="{% url 'location-map' %}" class="btn btn-primary">地図から探す</a>
 
 </article>
 <!----- /main ----->
